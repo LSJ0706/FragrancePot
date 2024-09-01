@@ -1,0 +1,65 @@
+@startuml
+
+entity PERFUME {
+    + perfume_id: serial<<generated>>
+    ---
+    + name: VARCHAR(255)
+    + brand: VARCHAR(100)
+    + price: BIGINT unsigned
+    + volume: INT unsigned
+    + concentration VARCHAR(100) # EDP, EDT
+    + scent: VARCHAR(100)
+    + department: VARCHAR(100) # man, woman, unisex, etc
+    + description: text
+    + created_at: TIMESTAMP
+    + updated_at: TIMESTAMP
+}
+
+entity PERFUME_NOTE {
+    + note_id: serial<<generated>>
+    ---
+    + perfume_id: BIGINT unsigned <<FK>>
+    + type: VARCHAR(100) # top, middle, base
+    + note: VARCHAR(255)
+    + created_at: TIMESTAMP
+}
+
+entity PERFUME_REVIEW {
+    + review_id: serial<<generated>>
+    ---
+    + user_id: BIGINT unsigned <<FK>>
+    + perfume_id: BIGINT unsigned <<FK>>
+    + rating: FLOAT unsigned
+    + review: TEXT
+    + created_at: TIMESTAMP
+    + updated_at: TIMESTAMP
+}
+
+entity USER {
+    + user_id: serial<<generated>>
+    ---
+    + email: VARCHAR(255) <<UNIQUE>>
+    + nickname: VARCHAR(100) <<UNIQUE>>
+    + sex: VARCHAR(10) # woman, man
+    + birthdate: DATE
+    + created_at: TIMESTAMP
+    + updated_at: TIMESTAMP
+}
+
+entity USER_ROLE {
+    + role_id: serial<<generated>>
+    ---
+    + user_id: BIGINT unsigned <<FK>>
+    + role: VARCHAR(100)
+    + created_at: TIMESTAMP
+    + updated_at: TIMESTAMP
+}
+
+PERFUME ||--o{ PERFUME_NOTE
+PERFUME ||--o{ PERFUME_REVIEW
+
+USER ||--o{ PERFUME_REVIEW
+USER ||--o{ USER_ROLE
+
+
+@enduml
