@@ -1,0 +1,464 @@
+openapi: 3.0.0
+info:
+  title: fragnance Pot API
+  version: 1.0.0
+  description: fragnance Pot을 위한 API문서
+
+paths:
+  /auth:
+    get:
+      description: 로그인시 생성된 jwt토큰을 이용하여 현재 사용자를 조회
+      tags:
+        - auth
+      security: #API에서 기본적으로 사용할 보안 방식 bearerAuth 보안 스키마 사용
+        - bearerAuth: [] #추가적인 매개변수가 필요하지 않음, JWT토큰 인증은 스코프가 없기 때문에 빈 배열 사용
+      responses:
+        "200":
+          description: 사용자 정보 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/user"
+        "401":
+          description: 없거나 잘못된 JWT token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+
+        "403":
+          description: 서버 접근에 대한 엑세스 금지
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        "500":
+          description: 서버 에러
+
+  /auth/signup:
+    post:
+      description: 새로운 유저 데이터 생성
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/newUser"
+      responses:
+        "201":
+          description: 유저 데이터 생성 완료
+        "400":
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        "500":
+          description: 서버 에러
+
+  /auth/signin:
+    post:
+      description: 사용자가 입력한 ID, PASSWoRD와 같으면 JWT토큰 발행행
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/signIn"
+      responses:
+        "200":
+          description: 로그인 성공
+          content:
+            application/json:
+              schema:
+                type: string
+                example: JWT...
+        "401":
+          description: email, password 잘못입력
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        "500":
+          description: 서버 에러
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+
+  /auth/{user_id}:
+    delete:
+      description: 유저 데이터 삭제
+      tags:
+        - auth
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: 회원 탈퇴 성공
+        "401":
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        "404":
+          description: 사용자 조회 실패
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+        "500":
+          description: 서버 에러
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/error"
+
+  /perfumes:
+    get:
+      description: 게시물 전체 조회
+      tags:
+        - perfume
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: 게시물 전체 조회 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentPage:
+                    type: integer
+                    example: 1
+                  totalPages:
+                    type: integer
+                    example: 5
+                  totalPerfumes:
+                    type: integer
+                    example: 50
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/perfumeList"
+        "400":
+          description: 잘못된 요청
+        "500":
+          description: 서버 에러
+
+    post:
+      description: 게시물 생성
+      tags:
+        - perfume
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/perfume"
+      responses:
+        "201":
+          description: 게시물 생성 완료
+        "400":
+          description: 잘못된 요청
+        "500":
+          description: 서버 에러
+
+  /perfumes/search:
+    get:
+      description: 게시물 검색
+      tags:
+        - perfume
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 10
+        - name: searchText
+          in: query
+          required: true
+          schema:
+            type: string
+            default: ""
+      responses:
+        "200":
+          description: 게시물 검색 성공
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currentPage:
+                    type: integer
+                    example: 1
+                  totalPages:
+                    type: integer
+                    example: 5
+                  totalPerfumes:
+                    type: integer
+                    example: 50
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/perfumeList"
+        "400":
+          description: 잘못된 요청
+        "500":
+          description: 서버 에러
+
+  /perfumes/{perfume_id}:
+    parameters:
+      - $ref: "#/components/parameters/perfumeParameter"
+
+    get:
+      description: 향수id를 기반으로 향수의 세부 정보 조회
+      tags:
+        - perfume
+      responses:
+        "200":
+          description: 향수 세부 정보 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/perfume"
+        "400":
+          description: 잘못된 요청
+        "500":
+          description: 서버 에러
+
+    put:
+      description: 향수 id를 기반으로 향수 정보 수정
+      tags:
+        - perfume
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/perfume"
+      responses:
+        "200":
+          description: 게시물 생성 완료
+        "400":
+          description: 잘못된 요청
+
+    delete:
+      tags:
+        - perfume
+      responses:
+        "204":
+          description: 향수 정보 삭제 완료
+        "400":
+          description: 잘못된 요청
+        "500":
+          description: 서버 에러
+
+  /perfumes/{perfume_id}/reviews:
+    parameters:
+      - $ref: "#/components/parameters/perfumeParameter"
+
+    get:
+      tags:
+        - review
+      responses:
+        "200":
+          description: 향수 리뷰 조회 성공
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/review"
+        "400":
+          description: 잘못된 요청
+        "500":
+          description: 서버 에러
+
+    post:
+      tags:
+        - review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/newReview"
+      responses:
+        "200":
+          description: 성공
+        "400":
+          description: 잘못된 요청
+        "500":
+          description: 서버 에러
+
+components:
+  securitySchemes: #보안 스키마를 정의
+    bearerAuth:
+      type: http #http 인증 방식
+      scheme: bearer #인증 방식이 bearer 토큰 방식, authorization Header에 JWT토큰을 넣어 서버로 인증 요청
+      bearerFormat: JWT #JWT형식의 토큰 사용
+  parameters:
+    perfumeParameter:
+      name: perfume_id
+      in: path
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    error:
+      type: string
+      example: 에러 메세지 입니다.
+    user:
+      type: object
+      properties:
+        email:
+          type: string
+          example: salt@naver.com
+        nickname:
+          type: string
+          example: saltapple
+        sex:
+          type: string
+          example: male
+        birthdate:
+          type: string
+          example: 1997-07-06
+        role:
+          type: string
+          example: admin
+      required:
+        - email
+        - nickname
+        - sex
+        - birthdate
+    newUser:
+      type: object
+      properties:
+        email:
+          type: string
+          example: salt@naver.com
+        password:
+          type: string
+          example: salt1234
+        nickname:
+          type: string
+          example: saltapple
+        sex:
+          type: string
+          example: male
+        birthdate:
+          type: string
+          example: 1997-07-06
+        role:
+          type: string
+          example: admin
+      required:
+        - email
+        - nickname
+        - password
+        - sex
+        - birthdate
+    signIn:
+      type: object
+      properties:
+        email:
+          type: string
+          example: salt@naver.com
+        password:
+          type: string
+          format: password
+          example: salt1234
+    perfumeList:
+      type: object
+      properties:
+        name:
+          type: string
+        brand:
+          type: string
+    perfume:
+      type: object
+      properties:
+        name:
+          type: string
+          description: 향수 이름
+        brand:
+          type: string
+          description: 브랜드
+        price:
+          type: integer
+          description: 향수 가격
+        volume:
+          type: integer
+          description: 향수 용량
+        concentration:
+          type: string
+          description: 향수 농도
+        scent:
+          type: string
+          description: 향
+        department:
+          type: string
+          description: 대상
+        notes:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                description: 노트 유형
+              note:
+                type: string
+                description: 노트 이름
+    review:
+      type: object
+      properties:
+        nickname:
+          type: string
+          example: saltapple
+        ratring:
+          type: number
+          example: 4.5
+        review:
+          type: string
+          example: 향이 생각보다 좋아요
+    newReview:
+      type: object
+      properties:
+        perfume_id:
+          type: integer
+          example: 1
+        rating:
+          type: number
+          example: 4.5
+        review:
+          type: string
+          example: 향이 생각보다 좋아요
